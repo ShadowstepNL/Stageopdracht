@@ -1,0 +1,850 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+	<xsd:annotation>
+		<xsd:documentation>Cash Register Interface V2</xsd:documentation>
+		<xsd:documentation>Changes for the V2 version of the interface are highlighted by [V2]</xsd:documentation>
+	</xsd:annotation>
+
+	<!--
+		After the TCP/IP connection has been established and before any other
+		message can be sent, an introduction request is sent from cash register to
+		Transaction Host. It is used to identify the cash register and the protocol
+		version that will be used. Each time the connection is lost and reestablished,
+		this introductory message must be sent.
+		
+		[V2]	Important notice: The IntroductionRequest|Response, besides establishing a connection
+				with a cash register, is used to select a protocolVersion. On the transactionHost side,
+				this first message is parsed using v1.0 (since we do not have a version selected yet).
+				Therefore, this message should remain backwards compatible; no fields should be changed
+				or new fields should be added.
+	-->
+	<xsd:element name="IntroductionRequest">
+		<xsd:complexType>
+			<xsd:sequence>
+				<!-- ID or name of the cash register -->
+				<xsd:element name="cashRegisterId" type="xsd:string" nillable="false" />
+				<!-- Cash register type (mobile, fixed or multi) -->
+				<xsd:element name="cashRegisterType" type="xsd:string" nillable="false" />
+				<xsd:element name="protocolVersion" type="xsd:string" nillable="false" />
+				<!-- ID of the cash register location -->
+				<xsd:element name="locationId" type="xsd:string" minOccurs="0" />
+				<!-- ID of the last known correctly processed transaction -->
+				<xsd:element name="previousTransactionId" type="xsd:string" minOccurs="0" />
+				<!-- [V2]	Language the cash register is set to. Used to send response messages (for display on cash register) back to cash register
+				     		Language is defined as 2 letter language code (ISO 639-1) optionally followed by 2 letter country code (ISO 3166-1). -->
+				<xsd:element name="language" type="xsd:string" minOccurs="0"/>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+
+	<xsd:element name="IntroductionResponse">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element name="code" type="IntroductionResponseCode" nillable="false" />
+				<xsd:element name="timeStamp" type="xsd:dateTime" nillable="false" />
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+
+	<xsd:simpleType name="IntroductionResponseCode">
+		<xsd:restriction base="xsd:string">
+			<!-- Cash register is not configured on the Transaction Host -->
+			<xsd:enumeration value="CASH_REGISTER_NOT_CONFIGURED" />
+			<!-- Protocol version is not supported by Transaction Host -->
+			<xsd:enumeration value="UNSUPPORTED_PROTOCOL_VERSION" />
+			<!-- Introduction was successfully acknowledged and normal communication can ensue -->
+			<xsd:enumeration value="INTRODUCTION_ACKNOWLEDGED_OK" />
+			<!-- No device is available -->
+			<xsd:enumeration value="NO_DEVICE_CONNECTED" />
+			<!-- A message that is invalid or unrecognized format is received -->
+			<xsd:enumeration value="INVALID_MESSAGE_RECEIVED" />			
+			<!-- [V2]	A Cash register with the same id was already connected -->
+			<xsd:enumeration value="CASH_REGISTER_ALREADY_CONNECTED" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
+
+	<!--
+		[Only for NFC payments]:
+		The amount which the cash register will send to the Transaction host
+		depends on the card which is used to pay with. Therefore, the first step
+		in the payment process will be to wait for a NFC card.
+	-->
+	<xsd:element name="CardRequest">
+		<xsd:complexType>
+			<xsd:sequence>
+				<!-- ID of the reader to pay with in the multi cash register scenario -->
+				<xsd:element name="readerId" type="xsd:string" minOccurs="0" />
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+
+	<xsd:element name="CardResponse">
+		<xsd:complexType>
+			<xsd:sequence>
+				<!-- Identification for the transaction -->
+				<xsd:element name="transactionId" type="xsd:string" nillable="false" />
+				<xsd:element name="code" type="TransactionHostResponseCode" nillable="false" />
+				<xsd:element name="timeStamp" type="xsd:dateTime" nillable="false" />
+				<xsd:element name="nfcId" type="xsd:string" minOccurs="0" />
+				<xsd:element name="loyaltyInfo" type="loyaltyData" minOccurs="0" />
+				<!-- ID or name of the reader -->
+				<xsd:element name="readerId" type="xsd:string" minOccurs="0" />
+				<!-- ID of the customer -->
+				<xsd:element name="customerId" type="xsd:string" minOccurs="0" />
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+
+	<xsd:complexType name="loyaltyData">
+		<xsd:sequence>
+			<!-- loyalty card number -->
+			<xsd:element name="loyaltyId" type="xsd:string" minOccurs="0" />
+			<!-- Airmiles card number -->
+			<xsd:element name="airmilesId" type="xsd:string" minOccurs="0" />
+			<!-- Processing manner for transaction receipts -->
+			<xsd:element name="receiptIndication" type="xsd:string" minOccurs="0" />
+		</xsd:sequence>
+	</xsd:complexType>
+
+
+	<!--
+		Payment request that is made by the cash register. If successful, the
+		specified amount will be charged from the account related to the offered
+		card (NFC card, Debit card)
+	-->
+	<xsd:element name="PaymentRequest">
+		<xsd:complexType>
+			<xsd:sequence>
+				<!-- [V2] device to target. -->
+				<xsd:element name="deviceTarget" type="Device" />
+				<!-- Amount to be payed. Can be a negative value -->
+				<xsd:element name="amount" type="xsd:decimal" nillable="false" />
+				<!-- Currency of the amount to be payed. ISO 4217 -->
+				<xsd:element name="currency" type="xsd:string" minOccurs="0" />
+				<!-- [V2] Number of decimal places. If omitted, default for currency will be used -->
+				<xsd:element name="decimalPlaces" type="xsd:integer" minOccurs="0" />
+				<!-- Optional list of ordered products. [V2]	When used for terminal: will contain transaction reference -->
+				<xsd:element name="description" type="xsd:string" minOccurs="0" />
+				
+				<!-- [V2] language of the progress report. No Effect for readers. Only required if different from cashRegister language set in IntroductionRequest.
+					      Language is defined as 2 letter language code (ISO 639-1) optionally followed by 2 letter country code (ISO 3166-1). -->
+				<xsd:element name="progressReportLanguage" type="xsd:string" minOccurs="0" />
+				<!-- [V2] preferences for printing. No effect for readers. -->
+				<xsd:element name="ticketPreferences" type="TicketPreferences" minOccurs="0" />
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+
+	<xsd:element name="PaymentResponse">
+		<xsd:complexType>
+			<xsd:sequence>
+				<!-- Identification for the transaction -->
+				<xsd:element name="transactionId" type="xsd:string" nillable="false" />
+				<xsd:element name="response" type="responseData" nillable="false" />
+				<xsd:element name="timeStamp" type="xsd:dateTime" nillable="false" />
+
+				<!-- [V2] type and ID of the device -->
+				<xsd:element name="deviceOrigin" type="Device" minOccurs="0" />
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+
+	<xsd:complexType name="responseData">
+		<xsd:sequence>
+			<!-- Response code of the Transaction Host -->
+			<xsd:element name="transactionHostCode" type="TransactionHostResponseCode" nillable="false" />
+			<!-- Identification of the payment service interface. If the interface is a device, it will be identified here. -->
+			<xsd:element name="paymentServiceInterface" type="xsd:string" minOccurs="0" />
+			<!-- Response code of the payment service. If the payment is done by a device, this may contain its (result)code -->
+			<xsd:element name="paymentServiceCode" type="xsd:string" minOccurs="0" />
+			<!-- The processor code of the payment service. If the payment is done by a device, this may contain its paymentCode -->
+			<xsd:element name="processorCode" type="xsd:string" minOccurs="0" />
+			<!-- The processor details of the payment service -->
+			<xsd:element name="processorDetails" type="ProcessorDetails" minOccurs="0" />
+			<!-- Response description of the payment service. [V2]	When used for terminal: will contain transaction reference. -->
+			<xsd:element name="paymentServiceDescription" type="xsd:string" minOccurs="0" />
+			<!-- MiniTix merchant ID of the payment service -->
+			<xsd:element name="paymentServiceMerchantId" type="xsd:string" minOccurs="0" />
+			<!-- MiniTix transaction amount -->
+			<xsd:element name="paymentServiceTransactionAmount" type="xsd:string" minOccurs="0" />
+			<!-- [V2] Currency of transaction. Only available if returned by paymentService. ISO 4217 -->
+			<xsd:element name="paymentServiceTransactionCurrency" type="xsd:string" minOccurs="0" />			
+			<!-- [V2] Number of decimal places. Only available if returned by paymentService -->
+			<xsd:element name="paymentServiceTransactionNRDecimal" type="xsd:integer" minOccurs="0" />
+			<!-- MiniTix transaction ID, stackId-tickedId -->
+			<xsd:element name="paymentServiceTransactionId" type="xsd:string" minOccurs="0" />
+			<!-- [V2] Payment service transaction timeStamp. Used for StatusMessage on terminal -->
+			<xsd:element name="paymentServiceTransactionTimestamp" type="xsd:string" minOccurs="0" />
+
+			<!-- [V2] current state of the device. Used for terminal. 4 byte hexadecimal bitmap. See Terminal spec. -->
+			<xsd:element name="deviceState" type="DeviceState" minOccurs="0" />
+			<!-- [V2] ticket data for this transaction -->
+			<xsd:element name="ticketData" type="TicketData" minOccurs="0" maxOccurs="unbounded" />
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ProcessorDetails">
+		<xsd:sequence>
+			<xsd:element name="debtorNo" type="xsd:string" minOccurs="0" />
+		</xsd:sequence>
+	</xsd:complexType>
+
+
+	<!--
+		A request to cancel the current (financial) transaction or operation can be issued by the cash
+		register to the Transaction Host.
+		
+		Note (financial transactions): it can only succeed if the cash
+		register has not started a PaymentRequest yet (in case of a NFC reader) or
+		the payment device hasn't submitted the actual financial transaction to the payment
+		processor (for instance; the device is waiting for the customer to acknowledge the amount).		
+		
+		Note (other): it can only succeeded when operation is still running.
+		
+		Also, the device sends update messages to the cash register (SystemMessage) to notify the CR of its current state / transaction progress.
+		in the deviceState field, the current possible operations (on the device) are communicated.
+		
+		In V1 of the interface this message was called CancelTransaction and triggered a CardResponse or PaymentResponse with code TRANSACTION_CANCELLED
+	-->
+	<xsd:element name="CancelRequest">
+		<xsd:complexType>
+			<xsd:sequence>
+				<!-- Identification for the (financial) transaction. Required when cancelling a payment. -->
+				<xsd:element name="transactionId" type="xsd:string" nillable="false" minOccurs="0" />
+				<!-- [V2]	Device this request targets. Required when cancelling other operations. -->
+				<xsd:element name="deviceTarget" type="Device" minOccurs="0" />
+				<!-- [V2]	Reason for cancelling. When omitted, default = SYSTEM -->
+				<xsd:element name="reason" type="CancelReason" minOccurs="0" />								
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+	
+	<!--
+		[V2]	in V1 a [operation]response with code TRANSACTION_CANCELLED was sent as a response on the CancelTransaction message.
+				in V2 a [operation]response with code OPERATION_CANCELLED will be followed by a CancelResponse with code REQUEST_SUCCEEDED
+				so logically both requests (operation + cancel requests) will be 'closed'						
+	 -->
+	<xsd:element name="CancelResponse">
+		<xsd:complexType>
+			<xsd:sequence>
+				<!-- result code -->
+				<xsd:element name="code" type="TransactionHostResponseCode" />				
+				<!-- time this response was sent -->
+				<xsd:element name="timeStamp" type="xsd:dateTime" nillable="false" />
+				<!-- Type of the operation that was cancelled -->
+				<xsd:element name="type" type="CancelType" minOccurs="0" />
+				<!-- id of the transaction that was cancelled -->
+				<xsd:element name="transactionId" type="xsd:string" nillable="false" minOccurs="0" />
+				<!-- device where the operation was cancelled -->
+				<xsd:element name="deviceOrigin" type="Device" minOccurs="0" />				
+				<!-- current state of the device. Used for terminal. 4 byte hexadecimal bitmap. See Terminal spec. -->
+				<xsd:element name="deviceState" type="DeviceState" minOccurs="0" />
+				<!-- result code originating from device -->
+				<xsd:element name="deviceResultCode" type="xsd:string" minOccurs="0" />
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+	
+	<xsd:simpleType name="CancelType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="PAYMENT" />
+			<xsd:enumeration value="STATUS" />
+			<xsd:enumeration value="TOTALS" />
+			<xsd:enumeration value="PRINT" />			
+		</xsd:restriction>
+	</xsd:simpleType>
+
+	<!--
+		Status request is used to retrieve the status of a previous transaction.
+		It should mainly be used in case of error recovery. In this way the cash
+		register can validate whether a payment was done or not in case it did not
+		receive the response after a network failure.
+	-->
+	<xsd:element name="StatusRequest">
+		<xsd:complexType>
+			<xsd:sequence>
+				<!-- Identification for the transaction. -->
+				<xsd:element name="transactionId" type="xsd:string" nillable="false" />
+				<!-- Target device. Only required for device that does payment itself. -->				
+				<xsd:element name="deviceTarget" type="Device" nillable="false" minOccurs="0" />
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+
+	<xsd:element name="StatusResponse">
+		<xsd:complexType>
+			<xsd:sequence>
+				<!-- [V2]	Identification for the transaction -->
+				<xsd:element name="transactionId" type="xsd:string" nillable="false" />
+				<!-- [V2] 	type and ID of the device. Only available when payment was done by device itself. -->
+				<xsd:element name="deviceOrigin" type="Device" minOccurs="0" />
+				
+				<!-- transaction data -->
+				<xsd:element name="response" type="responseData" nillable="false" />
+				<xsd:element name="timeStamp" type="xsd:dateTime" nillable="false" />
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+
+
+	<!--
+		KeepAlive messages are sent between cash register and Transaction Host
+		to check whether the connection is still working. When one party receives
+		a KeepAlive message it has to acknowledge it immediately.
+	-->
+	<xsd:element name="KeepAlive">
+		<xsd:complexType>
+			<xsd:sequence>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+
+	<xsd:element name="KeepAliveAcknowledge">
+		<xsd:complexType>
+			<xsd:sequence>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+
+
+	<!--
+		A transaction is split into two phases. The CardRequest phase and the
+		PaymentRequest phase. The return codes, however, have been merged into one
+		general transaction host response code.
+	-->
+	<xsd:simpleType name="TransactionHostResponseCode">
+		<xsd:restriction base="xsd:string">
+
+			<!-- During a transaction there are a number of states corresponding to the different color codes on the NFC reader -->
+			<!-- The CardRequest has been received and the reader is now waiting for a card -->
+			<xsd:enumeration value="CARDREQUEST_ACKNOWLEDGED" />
+			<!-- A card has been presented to the reader -->
+			<xsd:enumeration value="CARD_PRESENTED" />
+			<!-- The card has been authenticated by the card reader and Transaction Host -->
+			<xsd:enumeration value="CARD_AUTHENTICATED" />
+
+			<!-- The PaymentRequest has been received and the Transaction Host is now processing the request -->
+			<xsd:enumeration value="PAYMENTREQUEST_ACKNOWLEDGED" />
+			<!-- The payment has been successfully carried out -->
+			<xsd:enumeration value="PAYMENT_SUCCEEDED" />
+
+			<!-- During the card request there can occur a number of errors -->
+			<!-- The card is unknown to the system -->
+			<xsd:enumeration value="CARD_UNKNOWN" />
+			<!-- The card was not yet activated via the web portal -->
+			<xsd:enumeration value="CARD_NOT_ACTIVE" />
+			<!-- The card was expired -->
+			<xsd:enumeration value="CARD_EXPIRED" />
+			<!-- A different NFC card was expected -->
+			<xsd:enumeration value="CARD_UNEXPECTED" />
+			<!-- Something is wrong with the security -->
+			<xsd:enumeration value="SECURITY_ERROR" />
+
+			<!-- No device is available -->
+			<xsd:enumeration value="DEVICE_NOT_CONNECTED" />
+			<!-- [V2]	Operation (could be a transaction) was cancelled by the cash register (see Cancel) -->
+			<xsd:enumeration value="OPERATION_CANCELLED" />
+
+			<!-- During the payment request there can occur a number of errors -->
+			<!-- The account balance is too low -->
+			<xsd:enumeration value="INSUFFICIENT_FUNDS" />
+			<!-- Payment has failed because account was blocked -->
+			<xsd:enumeration value="ACCOUNT_BLOCKED" />
+			<!-- Only one transaction can be running at one time on the Transaction Host per cash register -->
+			<xsd:enumeration value="TRANSACTION_ALREADY_RUNNING" />
+			<!-- Amount must be supplied -->
+			<xsd:enumeration value="AMOUNT_MISSING" />
+			<!-- Amount is too low and the service refuses to handle it -->
+			<xsd:enumeration value="AMOUNT_TOO_LOW" />
+			<!-- Amount is too high for the service to handle -->
+			<xsd:enumeration value="AMOUNT_TOO_HIGH" />			
+			<!-- Payment service is offline -->
+			<xsd:enumeration value="SERVICE_UNREACHABLE" />
+
+			<!-- During all phases (payment and card request) there can occur a number of errors -->
+			<!-- Cash register has not yet sent the introduction request and is attempting communication -->
+			<xsd:enumeration value="CASH_REGISTER_NOT_INTRODUCED" />
+			<!-- A message that is invalid or unrecognized format is received -->
+			<xsd:enumeration value="INVALID_MESSAGE_RECEIVED" />
+			<!-- Generic error has occurred -->
+			<xsd:enumeration value="REQUEST_FAILED" />
+			<!-- Technical Error on the remote side, or malformed request -->
+			<xsd:enumeration value="TECHNICAL_ERROR" />
+			<!-- Unknown result -->
+			<xsd:enumeration value="RESULT_UNKNOWN" />
+
+			<!--
+			+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+			[V2] 	Below, codes can be found that were introduced in version 2 of the interface
+			+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+			-->
+			
+			<!--
+			while we keep status codes for older messages (cardRequest | paymentRequest, CARDREQUEST_ACKNOWLEDGED | CARDREQUEST_SUCCEEDED, etc)
+			the same, we would like to use general status codes for newer messages
+			-->			
+			<!-- message was received. This message will be send before processing starts. -->
+			<xsd:enumeration value="REQUEST_ACKNOWLEDGED" />
+			<!-- message was processed correctly. No errors occurred. -->
+			<xsd:enumeration value="REQUEST_SUCCEEDED" />
+			<!-- message is not supported by the device (or related paymentService) targeted -->
+			<xsd:enumeration value="REQUEST_NOT_SUPPORTED" />
+			<!-- device is not available for request; it is updating or otherwise not able to accept requests, it is in use by another cash register -->
+			<xsd:enumeration value="DEVICE_UNAVAILABLE" />
+			<!-- the result requested is not available -->
+			<xsd:enumeration value="RESULT_UNAVAILABLE" />
+			<!-- request was done at wrong moment in transaction flow -->			
+			<xsd:enumeration value="INCORRECT_STATE" />
+			<!-- amount is invalid -->
+			<xsd:enumeration value="AMOUNT_INVALID" />
+			<!-- currency is invalid -->
+			<xsd:enumeration value="CURRENCY_INVALID" />
+			
+			<!-- errors working with non reader devices (like terminal) -->		
+			<!-- printing is a compulsory action. It needs to be done before any new transaction can be executed -->
+			<xsd:enumeration value="PRINT_REQUIRED" />			
+			<!-- failed printing ticket -->
+			<xsd:enumeration value="PRINT_FAILED" />			
+			<!-- ticket preferences were missing -->
+			<xsd:enumeration value="TICKET_PREF_MISSING" />			
+			<!-- transaction is still running. No status can be given. -->
+			<xsd:enumeration value="TRANSACTION_STILL_RUNNING" />
+			<!-- another operation is currently in progress. Cash register has to wait for operation to finish. -->
+			<xsd:enumeration value="OPERATION_IN_PROGRESS" />			
+			
+			<!-- The payment failed after it was sent to the paymentService / payment device. General message.
+			     More information will be in the paymentServiceCode in the reponseData -->
+			<xsd:enumeration value="PAYMENT_FAILED" />			
+		</xsd:restriction>
+	</xsd:simpleType>	
+
+	<!--
+		The Transaction Host can send general system messages to the cash register
+		to inform about the status of different parts of the system.
+	-->
+	<xsd:element name="SystemMessage">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element name="code" type="SystemMessageCode" nillable="false" />
+				<xsd:element name="timeStamp" type="xsd:dateTime" nillable="false" />
+
+				<!-- [V2]	type and ID of the device -->
+				<xsd:element name="deviceOrigin" type="Device" minOccurs="0" />
+				
+				<!-- [V2]	id of the transaction. Used for transaction progress updates -->
+				<xsd:element name="transactionId" type="xsd:string" minOccurs="0" />
+
+				<!-- ID of the NFC card -->
+				<xsd:element name="nfcId" type="xsd:string" minOccurs="0" />
+
+				<!-- [V2]	current state of the device. Used for terminal. 4 byte hexadecimal bitmap. See Terminal spec. -->
+				<xsd:element name="deviceState" type="DeviceState" minOccurs="0" />
+				<!-- [V2]	reason the device disconnected -->
+				<xsd:element name="disconnectReason" type="DisconnectReason" minOccurs="0" />
+				<!-- [V2]	resultCode supplied by the device -->
+				<xsd:element name="deviceResultCode" type="xsd:string" minOccurs="0" />
+				<!-- [V2]	languages supported by the device. Used for progress reporting by device. Supplied when the device connects. -->
+				<xsd:element name="supportedLanguages" type="xsd:string" minOccurs="0" />
+
+				<!-- [V2]	message to displayed for the merchant -->
+				<xsd:element name ="merchantMessage" type="xsd:string" minOccurs="0" />
+				<!-- [V2]	current stage of the transaction -->
+				<xsd:element name="progress" type="TransactionProgressStage" minOccurs="0" />
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+
+	<xsd:simpleType name="SystemMessageCode">
+		<xsd:restriction base="xsd:string">
+			<!-- The device configured to the cash register disconnects -->
+			<xsd:enumeration value="DEVICE_DISCONNECTED" />
+			<!-- The device configured to the cash register connects -->
+			<xsd:enumeration value="DEVICE_CONNECTED" />
+			<!-- The connection with MiniTix is offline -->
+			<xsd:enumeration value="MINITIX_OFFLINE" />
+			<!-- The connection with MiniTix is online -->
+			<xsd:enumeration value="MINITIX_ONLINE" />
+			<!-- Some general error occurred in the Transaction Host -->
+			<xsd:enumeration value="TXHOST_ERROR" />
+			<!-- Unknown message received -->
+			<xsd:enumeration value="MESSAGE_UNKNOWN" />
+			<!-- No devices are available -->
+			<xsd:enumeration value="NO_DEVICES_CONNECTED" />
+			<!-- A different NFC card was expected -->
+			<xsd:enumeration value="CARD_UNEXPECTED" />
+			<!-- The card is unknown to the system -->
+			<xsd:enumeration value="CARD_UNKNOWN" />
+
+
+			<!-- [V2] The current state of the device connected to the cash register is being sent -->
+			<xsd:enumeration value="DEVICE_STATE" />
+			<!-- [V2] Reports from devices, reporting progress for a transaction is one of them -->
+			<xsd:enumeration value="REPORT" />
+			<!-- [V2] Error while performing transaction with device -->
+			<xsd:enumeration value="DEVICE_ERROR" />
+
+		</xsd:restriction>
+	</xsd:simpleType>
+
+	<!--
+	+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	[V2]	Below, messages can be found that were introduced in version 2 of the interface.
+	Some of these messages are not supported by all devices. In case this is so;
+	TransactionHostResponseCode.REQUEST_NOT_SUPPORTED will be returned in the response
+	+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	-->
+	
+	<!--
+		The cash register can send a message to disconnect a particular device. This applies, for instance,
+		to pay terminals which do not require the CR to be able to do a payment and are capable of processing
+		transactions stand-alone 
+	 -->
+	<xsd:element name="DisconnectRequest">
+		<xsd:complexType>
+			<xsd:sequence>
+				<!-- device this requests targets -->
+				<xsd:element name="deviceTarget" type="Device" />
+				<!-- reason for disconnecting the device -->
+				<xsd:element name="reason" type="DisconnectReason" fixed="DISCONNECT"/>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>	
+
+	<xsd:element name="DisconnectResponse">
+		<xsd:complexType>
+			<xsd:sequence>
+				<!-- result code -->
+				<xsd:element name="code" type="TransactionHostResponseCode" />
+				<!-- timeStamp for the response -->
+				<xsd:element name="timeStamp" type="xsd:dateTime" nillable="false" />
+				<!-- device this response originates -->
+				<xsd:element name="deviceOrigin" type="Device" />		
+				<!-- result code originating from device -->
+				<xsd:element name="deviceResultCode" type="xsd:string" minOccurs="0" />		
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>	
+
+	<!--
+		Request the transaction totals from the device.
+	-->
+	<xsd:element name="TotalsRequest">
+		<xsd:complexType>
+			<xsd:sequence>
+				<!-- device this request targets -->
+				<xsd:element name="deviceTarget" type="Device" />
+				<!-- type of totals report we are requesting -->
+				<xsd:element name="totalsType" type="xsd:string" />
+				<!-- preferences for how the data is to be printed or returned -->
+				<xsd:element name="ticketPreferences" type="TicketPreferences" minOccurs="0" />
+				<xsd:element name="ecrLanguage" type="xsd:string" minOccurs="0" />
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>	
+	
+	<xsd:element name="TotalsResponse">
+		<xsd:complexType>
+			<xsd:sequence>				
+				<xsd:element name="code" type="TransactionHostResponseCode" />
+				<!-- timeStamp for the response -->
+				<xsd:element name="timeStamp" type="xsd:dateTime" nillable="false" />
+				<!-- Origin for the response -->
+				<xsd:element name="deviceOrigin" type="Device" />
+				<!-- Resulting ticket -->
+				<xsd:element name="ticketResponse" type="TicketResponseData" minOccurs="0" />
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+
+	<!--
+		When printing a ticket is compulsory using a device that supports printing,
+		and this failed for some reason, this message can be used to print the ticket
+		(or send it to the cash register) and so re-enable the device to accept new
+		transactions. This action gets done within the scope of a transaction,
+		so no device or transaction id needs to be supplied.
+	 -->
+	<xsd:element name="PrintRequest">
+		<xsd:complexType>
+			<xsd:sequence>
+				<!-- preferences for how the ticket will printed or returned -->			
+				<xsd:element name="ticketPreferences" type="TicketPreferences" minOccurs="0" />
+				<!-- transaction id. Used for check if we request the ticket for the right transaction. -->
+				<xsd:element name="transactionId" type="xsd:string" minOccurs="0" />				
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+
+	<xsd:element name="PrintResponse">
+		<xsd:complexType>
+			<xsd:sequence>
+				<!-- Result code for this request -->
+				<xsd:element name="code" type="TransactionHostResponseCode" />
+				<!-- timeStamp for the response -->
+				<xsd:element name="timeStamp" type="xsd:dateTime" nillable="false" />
+				<!-- Device that the print request was send to. -->
+				<xsd:element name="deviceOrigin" type="Device" minOccurs="0" />
+				<!-- id of the current transaction.  -->
+				<xsd:element name="transactionId" type="xsd:string" nillable="false" minOccurs="0" />
+				<!-- resulting ticket data -->											
+				<xsd:element name="ticketResponse" type="TicketResponseData" minOccurs="0" />
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+	
+	<!--
+		When printing a ticket is compulsory using a device that supports printing,
+		and the target device to print on (PrintOrigin) was set to Cash Register (only),
+		the result of printing on the cash register has to be confirmed to the device (otherwise the device might block).
+		Two occasions this message will be necessary:
+		
+		1. PaymentRequest	was sent with printOrigin=CashRegister. 		Response with ticket with code PAYMENT_SUCCEEDED was received by CR.
+		2. PaymentRequest 	was sent with printOrigin (printing on device). Response with code PRINT_FAILED was received by CR.
+		   PrintRequest		was sent with printOrigin=CashRegister. 		Response with ticket with code REQUEST_SUCCEEDED was received by CR
+		   
+		If printing the ticket on the cash register was confirmed with PRINT_FAILED the ticket needs to be requested again,
+		giving another chance to printing the ticket and completing the transaction.
+	-->
+	<xsd:element name="PrintConfRequest">
+		<xsd:complexType>
+			<xsd:sequence>
+				<!-- Result of the print operation on the cash register -->
+				<xsd:element name="code" type="CashRegisterResponseCode" />
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+	
+	<xsd:element name="PrintConfResponse">
+		<xsd:complexType>
+			<xsd:sequence>
+				<!-- Result code for this request -->
+				<xsd:element name="code" type="TransactionHostResponseCode" />
+				<!-- timeStamp for the response -->
+				<xsd:element name="timeStamp" type="xsd:dateTime" nillable="false" />
+				<!-- Device that the print request was send to. -->
+				<xsd:element name="deviceOrigin" type="Device" minOccurs="0" />
+				<!-- id of the current transaction.  -->
+				<xsd:element name="transactionId" type="xsd:string" nillable="false" minOccurs="0" />
+				<!-- current state the device is in. Used for terminal. 4 byte hexadecimal bitmap. See Terminal spec. -->
+				<xsd:element name="deviceState" type="DeviceState" minOccurs="0" />
+				<!-- result code returned by device. Device specific so device specifications are required for interpretation. -->
+				<xsd:element name="deviceResultCode" type="xsd:string" minOccurs="0" />
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+	
+	<!--
+		Change a setting on the targeted device. 
+	-->
+	<xsd:element name="ChangeSettingsRequest">
+		<xsd:complexType>
+			<xsd:sequence>
+				<!-- device this request targets -->
+				<xsd:element name="deviceTarget" type="Device" />
+				<!-- settings to set on the device -->
+				<xsd:element name="setting" type="SettingData" minOccurs="1" maxOccurs="unbounded" />
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+	
+	<xsd:element name="ChangeSettingsResponse">
+		<xsd:complexType>
+			<xsd:sequence>
+				<!-- Result code for this request -->
+				<xsd:element name="code" type="TransactionHostResponseCode" />
+				<!-- timeStamp for the response -->
+				<xsd:element name="timeStamp" type="xsd:dateTime" nillable="false" />
+				<!-- Device that the print request was send to. -->
+				<xsd:element name="deviceOrigin" type="Device" minOccurs="0" />
+				<!-- result code returned by device. Device specific so device specifications are required for interpretation. -->
+				<xsd:element name="deviceResultCode" type="xsd:string" minOccurs="0" />
+				<!-- result of the change setting operation per setting -->
+				<xsd:element name="settingResult" type="SettingResultData" minOccurs="0" maxOccurs="unbounded" />
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+	
+	<xsd:complexType name="SettingData">
+		<xsd:sequence>
+			<!-- id of the setting. Refer to the device specification for details. -->
+			<xsd:element name="settingId" type="xsd:string" />			
+			<!-- value of the setting -->
+			<xsd:element name="value" type="xsd:string" />			
+		</xsd:sequence>
+	</xsd:complexType>
+	
+	<xsd:complexType name="SettingResultData">
+		<xsd:sequence>
+			<!-- id of the setting. Refer to the device specification for details. -->
+			<xsd:element name="settingId" type="xsd:string" />
+			<xsd:element name="code" type="SettingResultCode" />
+		</xsd:sequence>
+	</xsd:complexType>
+	
+	<xsd:simpleType name="SettingResultCode">
+		<xsd:restriction base="xsd:string">
+			<!-- Setting change was accepted -->
+			<xsd:enumeration value="ACCEPTED" />
+			<!-- Unknown setting -->
+			<xsd:enumeration value="UNKNOWN" />
+			<!-- Changing setting not allowed -->
+			<xsd:enumeration value="NOT_ALLOWED" />
+			<!-- Setting change was rejected -->
+			<xsd:enumeration value="REJECTED" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
+	<xsd:complexType name="TicketResponseData">
+		<xsd:sequence>
+			<!-- current state the device is in. Used for terminal. 4 byte hexadecimal bitmap. See Terminal spec. -->
+			<xsd:element name="deviceState" type="DeviceState" />
+			<!-- result code returned by device. Device specific so device specifications are required for interpretation. -->
+			<xsd:element name="deviceResultCode" type="xsd:string" minOccurs="0" />
+			<!-- resulting ticket -->
+			<xsd:element name="ticketData" type="TicketData" minOccurs="0" maxOccurs="unbounded" />
+		</xsd:sequence>
+	</xsd:complexType>
+	
+	<!-- preferences for the way ticket is printed or returned -->
+	<xsd:complexType name="TicketPreferences">
+		<xsd:sequence>
+			<xsd:element name="printOrigin" type="PrintOrigin" />
+			<!-- paper width (in nr of characters) of the ticket sent back to the cash register. -->
+			<xsd:element name="paperWidth" type="xsd:integer" minOccurs="0" />
+			<!-- options for encryption of the ticket. -->
+			<xsd:element name="encryptionParameters" type="EncryptionParameters" minOccurs="0" />
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<!-- Data for the financial transaction ticket. Format of ticket is device dependent and specified
+	     seperately.
+	-->
+	<xsd:complexType name="TicketData">
+		<xsd:sequence>			
+			<xsd:element name="ticketType" type="xsd:string" />			
+			<xsd:element name="ticket" type="xsd:base64Binary" />
+			<xsd:element name="ticketHeader" type="xsd:base64Binary" minOccurs="0" />
+			<xsd:element name="ticketFooter" type="xsd:base64Binary" minOccurs="0" />
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<!-- A stage in the processing of a financial transaction -->
+	<xsd:complexType name="TransactionProgressStage">
+		<xsd:sequence>
+			<!-- Current stage the transaction is in -->
+			<xsd:element name="stage" type="ProgressStage" />			
+			<!-- Message belonging to this stage of the transaction. Might be displayed by the cash register. -->
+			<xsd:element name="message" type="xsd:string" minOccurs="0" />
+		</xsd:sequence>
+	</xsd:complexType>	
+
+	<xsd:simpleType name="DisconnectReason">
+		<xsd:restriction base="xsd:string">
+			<!-- disconnect the device and proceed to stand-alone mode -->
+			<xsd:enumeration value="DISCONNECT" />
+			<!-- the cash register will shut down. Reconnect after reboot. -->
+			<xsd:enumeration value="SHUTDOWN" />
+			<!-- the device has to reboot. After reboot it will reconnect. -->
+			<xsd:enumeration value="REBOOT" />		
+			<!-- the device has to reconnect. -->
+			<xsd:enumeration value="RECONNECT" />
+			<!-- returned by the terminal when shutdown because of empty battery -->
+			<xsd:enumeration value="BATTERY_EMPTY" />
+		</xsd:restriction>
+	</xsd:simpleType>
+	
+	<!-- Result codes for the Cash Register -->
+	<xsd:simpleType name="CashRegisterResponseCode">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="PRINT_SUCCEEDED" />
+			<xsd:enumeration value="PRINT_FAILED" />			
+		</xsd:restriction>
+	</xsd:simpleType>
+
+	<!-- Progress of the transaction. -->
+	<xsd:simpleType name="ProgressStage">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="NONE" />
+			<!-- we are waiting for a card to be inserted in the terminal -->
+			<xsd:enumeration value="WAIT_CARD" />
+			<!-- we are waiting for the CODE to be entered by the card holder -->
+			<xsd:enumeration value="WAIT_CODE" />
+			<!-- we are waiting for the amount to be confirmed -->
+			<xsd:enumeration value="WAIT_AMOUNT" />
+			<!--  waiting for the selection of the service (chipknip, MAESTRO, etc) -->
+			<xsd:enumeration value="WAIT_SERVICE" />			
+			<!--  waiting for the selection of the service and amount -->
+			<xsd:enumeration value="WAIT_SERVICE_AMOUNT" />
+			<!-- waiting for entering of TIP (tip for waitress for instance) by the card holder -->
+			<xsd:enumeration value="WAIT_TIP" />			
+			<!-- the actual financial transaction is running -->
+			<xsd:enumeration value="TRANSACTION" />
+			<!-- results of the last transaction are being displayed on the terminal. -->
+			<xsd:enumeration value="WAIT_TRANSACTION_RESULT" />			
+			<!-- the transaction is finished -->
+			<xsd:enumeration value="FINISHED" />
+			<!--  the device is waiting for the card to be removed by the card holder -->
+			<xsd:enumeration value="WAIT_CARD_REMOVAL" />
+		</xsd:restriction>
+	</xsd:simpleType>
+	
+	<!-- Preferences for where the ticket is to be printed or returned -->
+	<xsd:simpleType name="PrintOrigin">
+		<xsd:restriction base="xsd:string">			
+			<!-- print ticket on the device -->
+			<xsd:enumeration value="DEVICE" />
+			<!-- return ticket to the cash register so it can be printed there -->
+			<xsd:enumeration value="CASH_REGISTER" />			
+			<!-- ticket has to be printed on both -->
+			<xsd:enumeration value="BOTH" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
+	<!-- Parameters for encryption. Refer to device interface specifications for possible options. -->
+	<xsd:complexType name="EncryptionParameters">
+		<xsd:sequence>
+			<!-- Algoritm to choose. -->
+			<xsd:element name="algorithm" type="xsd:string" />
+			<!-- Key id to choose. Used for key diversification -->
+			<xsd:element name="keyId" type="xsd:string" />
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<!-- Device to target or where a message originated -->
+	<xsd:complexType name="Device">
+		<xsd:sequence>
+			<!-- Type of the device to target -->
+			<xsd:element name="deviceType" type="DeviceType" />
+			<!-- Id of the device to target -->
+			<xsd:element name="deviceId" type="xsd:string" />
+		</xsd:sequence>
+	</xsd:complexType>
+	
+	<!-- Current state of the device. -->
+	<xsd:complexType name="DeviceState">
+		<xsd:sequence>
+			<!-- current state of the device. Describes what actions are possible. Refer to the Device interface specification for possible options. 4 byte bitmap in HEX. -->
+			<xsd:element name="state" type="xsd:string" />					
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<!-- Type of the device to target or where a message originated -->
+	<xsd:simpleType name="DeviceType">
+		<xsd:restriction base="xsd:string">
+			<!-- NFC reader -->
+			<xsd:enumeration value="READER" />
+			<!-- Pay terminal -->
+			<xsd:enumeration value="PAYTERMINAL" />
+		</xsd:restriction>
+	</xsd:simpleType>	
+	
+	<xsd:simpleType name="CancelReason">
+		<xsd:restriction base="xsd:string">
+			<!-- Transaction was cancelled by Cashier -->
+			<xsd:enumeration value="MANUAL" />
+			<!-- Transaction was cancelled by Cash Register -->
+			<xsd:enumeration value="SYSTEM" />
+		</xsd:restriction>		
+	</xsd:simpleType>
+
+</xsd:schema>
