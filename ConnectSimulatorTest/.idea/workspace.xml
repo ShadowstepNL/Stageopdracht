@@ -4,7 +4,7 @@
     <list default="true" id="ca22076b-bc91-4578-8fe8-bb870a4c4063" name="Default" comment="" />
     <ignored path="ConnectSimulatorTest.iws" />
     <ignored path=".idea/workspace.xml" />
-    <file path="/Main.java" changelist="ca22076b-bc91-4578-8fe8-bb870a4c4063" time="1381410327620" ignored="false" />
+    <file path="/Main.java" changelist="ca22076b-bc91-4578-8fe8-bb870a4c4063" time="1382344027043" ignored="false" />
     <file path="/IntroductionRequest.java" changelist="ca22076b-bc91-4578-8fe8-bb870a4c4063" time="1380798170797" ignored="false" />
     <file path="/JAXB.java" changelist="ca22076b-bc91-4578-8fe8-bb870a4c4063" time="1380550677916" ignored="false" />
     <file path="/fragment.java" changelist="ca22076b-bc91-4578-8fe8-bb870a4c4063" time="1380874784389" ignored="false" />
@@ -33,7 +33,6 @@
     <disable_hints />
   </component>
   <component name="DebuggerManager">
-    <line_breakpoints default_suspend_policy="SuspendAll" default_condition_enabled="true" />
     <ui_properties default_suspend_policy="SuspendAll" default_condition_enabled="true" />
     <breakpoint_any default_suspend_policy="SuspendAll" default_condition_enabled="true">
       <breakpoint>
@@ -71,6 +70,7 @@
         <option name="LOG_MESSAGE" value="" />
       </breakpoint>
     </breakpoint_any>
+    <line_breakpoints default_suspend_policy="SuspendAll" default_condition_enabled="true" />
     <breakpoint_rules />
     <ui_properties />
   </component>
@@ -83,10 +83,19 @@
       <file leaf-file-name="Main.java" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/Main.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="84" column="86" selection-start="2881" selection-end="2881" vertical-scroll-proportion="0.36213017">
+            <state line="315" column="42" selection-start="11560" selection-end="11560" vertical-scroll-proportion="6.035503">
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="CardRequest.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/generatedClasses/CardRequest.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="24" column="51" selection-start="820" selection-end="820" vertical-scroll-proportion="0.0">
+              <folding />
             </state>
           </provider>
         </entry>
@@ -183,7 +192,7 @@
       <sortByType />
     </navigator>
     <panes>
-      <pane id="Scope" />
+      <pane id="PackagesPane" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -240,7 +249,7 @@
           </PATH>
         </subPane>
       </pane>
-      <pane id="PackagesPane" />
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -392,6 +401,11 @@
     </configuration>
   </component>
   <component name="ShelveChangesManager" show_recycled="false" />
+  <component name="SliceManager">
+    <option name="analysisUIOptions">
+      <AnalysisUIOptions />
+    </option>
+  </component>
   <component name="SvnConfiguration" maxAnnotateRevisions="500" myUseAcceleration="nothing" myAutoUpdateAfterCommit="false" cleanupOnStartRun="false" SSL_PROTOCOLS="all">
     <option name="USER" value="" />
     <option name="PASSWORD" value="" />
@@ -453,11 +467,11 @@
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24418604" sideWeight="0.712313" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.24908201" sideWeight="0.712313" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.287687" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.17747858" sideWeight="0.7491369" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25086308" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32982457" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32806325" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32982457" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
@@ -528,42 +542,19 @@
     <option name="FILTER_TARGETS" value="false" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="jar://C:/Program Files/Java/jdk1.7.0_25/src.zip!/org/xml/sax/helpers/LocatorImpl.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="222" column="0" selection-start="5228" selection-end="5228" vertical-scroll-proportion="0.0" />
-      </provider>
-    </entry>
-    <entry file="jar://C:/Program Files/Java/jdk1.7.0_25/src.zip!/org/xml/sax/InputSource.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="312" column="0" selection-start="9076" selection-end="9076" vertical-scroll-proportion="0.0" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/generatedClasses/IntroductionResponse.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="40" column="0" selection-start="1325" selection-end="1325" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/generatedClasses/IntroductionResponseCode.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="33" column="0" selection-start="1168" selection-end="1168" vertical-scroll-proportion="0.25463745">
-          <folding />
-        </state>
+        <state line="33" column="0" selection-start="1168" selection-end="1168" vertical-scroll-proportion="0.25463745" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/generatedClasses/ObjectFactory.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="130" column="29" selection-start="3256" selection-end="3256" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
+        <state line="130" column="29" selection-start="3256" selection-end="3256" vertical-scroll-proportion="0.0" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/generatedClasses/PrintOrigin.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="30" column="0" selection-start="905" selection-end="905" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
+        <state line="30" column="0" selection-start="905" selection-end="905" vertical-scroll-proportion="0.0" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/generatedClasses/Device.java">
@@ -575,16 +566,12 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/generatedClasses/TicketPreferences.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="37" column="0" selection-start="1305" selection-end="1305" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
+        <state line="37" column="0" selection-start="1305" selection-end="1305" vertical-scroll-proportion="0.0" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/generatedClasses/EncryptionParameters.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="37" column="0" selection-start="1232" selection-end="1232" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
+        <state line="37" column="0" selection-start="1232" selection-end="1232" vertical-scroll-proportion="0.0" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/generatedClasses/PaymentRequest.java">
@@ -596,9 +583,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/generatedClasses/DeviceType.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="40" column="32" selection-start="1048" selection-end="1048" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
+        <state line="40" column="32" selection-start="1048" selection-end="1048" vertical-scroll-proportion="0.0" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/generatedClasses/CancelType.java">
@@ -629,9 +614,28 @@
         </state>
       </provider>
     </entry>
+    <entry file="jar://C:/Program Files/Java/jdk1.7.0_25/src.zip!/javax/xml/bind/helpers/AbstractUnmarshallerImpl.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="156" column="0" selection-start="4875" selection-end="4875" vertical-scroll-proportion="0.3322091" />
+      </provider>
+    </entry>
+    <entry file="jar://C:/Program Files/Java/jdk1.7.0_25/src.zip!/javax/xml/bind/Marshaller.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="404" column="16" selection-start="16168" selection-end="16168" vertical-scroll-proportion="0.5776">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/generatedClasses/CardRequest.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="24" column="51" selection-start="820" selection-end="820" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/Main.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="84" column="86" selection-start="2881" selection-end="2881" vertical-scroll-proportion="0.36213017">
+        <state line="315" column="42" selection-start="11560" selection-end="11560" vertical-scroll-proportion="6.035503">
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
